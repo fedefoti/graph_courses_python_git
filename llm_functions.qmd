@@ -1,0 +1,138 @@
+# Imports
+
+```{python}
+from openai import OpenAI
+import pandas as pd
+import numpy as np
+```
+
+# Setting up the OpenAI client
+
+```{python}
+client = OpenAI(api_key = "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")
+```
+
+# Making our first call
+
+```{python}
+response = client.chat.completions.create(
+    model="gpt-4o-mini", messages=[{"role": "user", "content": "What is the most tourist-friendly city in France?"}]
+)
+print(response.choices[0].message.content)
+```
+
+# Defining a helper function
+
+```{python}
+def llm_chat(message):
+    response = client.chat.completions.create(
+    model="gpt-4o-mini", 
+    messages=[{"role": "user", "content": message}])
+    return response.choices[0].message.content
+```
+
+```{python}
+llm_chat("Tell me why Python is an awesome language")
+```
+
+# Practice Q:
+
+```{python}
+rec_brazil = llm_chat("What is the most tourist-friendly city in Brazil")
+print(rec_brazil)
+```
+
+# Variables as prompt inputs
+
+```{python}
+def city_rec(country):
+    prompt = f"What is the most tourist-friendly city in {country}?"
+    return llm_chat(prompt)
+
+```
+
+```{python}
+city_rec("Nigeria")
+```
+
+```{python}
+country_df = pd.DataFrame({"country": ["Nigeria", "Chile", "France", "Canada"]})
+
+response = city_rec_vec(country_df["country"])
+
+print(response)
+```
+
+```{python}
+# Vectorize the function
+city_rec_vec = np.vectorize(city_rec)
+
+# Apply the function to each country
+country_df["city_rec"] = city_rec_vec(country_df["country"])
+country_df
+```
+
+# Practice Q:
+
+```{python}
+def get_local_dishes(country):
+    prompt = f"What are of the most famous local dishes from {country}?"
+    return llm_chat(prompt)
+
+get_local_dishes_vec = np.vectorize(get_local_dishes)
+
+country_df["local_dishes_rec"] = get_local_dishes_vec(country_df["country"])
+country_df
+```
+
+# Automated Summary:
+
+```{python}
+movies = pd.read_csv("data/movies.csv").head()
+```
+
+```{python}
+movies["full_dict"] = movies.to_dict(orient="records")
+movies
+```
+
+```{python}
+def movie_performance(movie_data):
+    prompt = f"Considering the following data on this movie {movie_data}, provide a one-paragraph summary of its performance for my report."
+    return llm_chat(prompt)
+
+movie_performance_vec = np.vectorize(movie_performance)
+```
+
+```{python}
+movies["llm_summary"] = movie_performance_vec(movies["full_dict"])
+```
+```{python}
+movies.to_csv("movies_output.csv", index=False)
+```
+
+# Practice Q:
+
+```{python}
+import vega_datasets as vd
+
+weather = vd.data.seattle_weather().head()
+weather 
+```
+
+```{python}
+weather["full_dic"] = weather.to_dict(orient="records")
+weather
+```
+
+```{python}
+def weather_cond(weather_info):
+    prompt = f"Considering the following data on this day {weather_info}, provide a one-paragraph summary of its weather for my report."
+    return llm_chat(prompt)
+
+weather_cond_vec = np.vectorize(weather_cond)
+```
+
+```{python}
+weather["llm_summary"] = weather_cond_vec(weather["full_dic"])
+```

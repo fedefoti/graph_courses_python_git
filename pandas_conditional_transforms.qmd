@@ -1,0 +1,173 @@
+# Imports
+
+```{python}
+import pandas as pd
+import numpy as np
+import vega_datasets as vd
+import plotly.express as px
+```
+
+
+# Intro to replace()
+
+```{python}
+tips = px.data.tips()
+tips['day'].unique()
+```
+
+```{python}
+day_mapping = {
+    "Sun": "Sunday",
+    "Sat": "Saturday",
+    "Fri": "Friday",
+    "Thur": "Thursday"
+}
+
+tips['day'] = tips['day'].replace(day_mapping)
+tips
+```
+
+```{python}
+tips['day_full'] = tips['day'].replace({
+    "Sun": "Sunday",
+    "Sat": "Saturday",
+    "Fri": "Friday",
+    "Thur": "Thursday"
+})
+tips[['day', 'day_full']].head()
+```
+
+# Practice Q:
+
+```{python}
+tips["sex_abbr"] = tips["sex"].replace({
+    "Female" : "F",
+    "Male" : "M"
+})
+tips
+```
+
+# Handling missing values with replace()
+
+```{python}
+movies = pd.read_csv("data/movies.csv")
+```
+```{python}
+movies
+movies['Creative_Type'].value_counts(dropna=False)
+# 446 missing values
+```
+
+```{python}
+# replace None values with a string
+movies['Creative_Type'] = movies['Creative_Type'].replace({
+    None: "Unknown/Unclear", # 👈 On this line, None is the key
+})
+```
+
+```{python}
+# replace NaN values with a number
+movies.query("US_DVD_Sales.isna()").shape
+
+movies['US_DVD_Sales'] = movies['US_DVD_Sales'].replace({
+    np.nan: 0 # 👈 `NaN` is represented by `np.nan` in pandas
+})
+```
+
+```{python}
+movies['US_DVD_Sales'].tail(10)
+```
+
+# Practice Q:
+```{python}
+movies["MPAA_Rating"].value_counts()
+```
+```{python}
+movies["MPAA_Rating"] = movies["MPAA_Rating"].replace({None: "Unrated", "Not Rated" : "Unrated"})
+movies["MPAA_Rating"].value_counts()
+```
+
+# Categorizing numeric data with custom functions
+We can categorize the US_Gross column into three categories based on the following criteria:
+- If the value is less than 10 million, the category is "Low".
+- If the value is between 10 million and 50 million, the category is "Medium".
+- If the value is greater than 50 million, the category is "High".
+
+```{python}
+def categ_gross(gross):
+    if gross < 10000000:
+        return "Low"
+    elif gross >= 10000000 and gross <= 50000000:
+        return "Medium"
+    elif gross > 50000000:
+        return "High"
+    else:
+        return None 
+
+
+categ_gross_vec = np.vectorize(categ_gross)
+
+```
+
+```{python}
+movies['Gross_Category'] = categ_gross_vec(movies['US_Gross'])
+movies['Gross_Category'].value_counts(dropna=False)
+```
+
+# Complex transformations with custom functions
+
+```{python}
+# Define the function to flag movies based on the conditions
+def flag_movie(movie_type, us, worldwide):
+    if movie_type == 'Super Hero' and us == worldwide:
+        return 'US action movie'
+    elif movie_type == 'Super Hero' and worldwide > us:
+        return 'Global action movie'
+    else:
+        return None
+
+flag_movie_vec = np.vectorize(flag_movie)
+```
+
+```{python}
+flag_movie(movie_type = "Super Hero", us = 100, worldwide = 100)
+flag_movie(movie_type = "Super Hero", us = 100, worldwide = 200)
+flag_movie(movie_type = "Comedy", us = 100, worldwide = 100)
+```
+
+```{python}
+movies['Action_Flag'] = flag_movie_vec(movies['Creative_Type'], movies['US_Gross'], movies['Worldwide_Gross'])
+
+movies['Action_Flag'].value_counts(dropna=False)
+```
+
+# Practice Q
+In the movies dataset, flag movies as Critic-friendly or Commercial based on their Rotten Tomatoes and IMDB ratings.
+
+- If the Rotten Tomatoes rating is above 70% and the IMDB rating is below 5, the movie is flagged as Critic-friendly.
+- If the Rotten Tomatoes rating is below 50% and the IMDB rating is above 7, the movie is flagged as Commercial.
+- Otherwise, the movie is categorized as Other.
+
+Count how many movies are Critic-friendly and Commercial. There should be 13 Critic-friendly movies and 33 Commercial movies. Do you recognize any of them?
+
+```{python}
+#movies["Rotten_Tomatoes_Rating"]
+#movies["IMDB_Rating"]
+
+def categorize_rating(rt_rating, imdb_rating):
+    if rt_rating >= 70 and imdb_rating < 5:
+        return "Critic-friendly"
+    elif rt_rating < 50 and imdb_rating > 7:
+        return "Commercial"
+    else:
+        return "Other"
+
+categorize_rating_vec = np.vectorize(categorize_rating)
+
+movies["Rating_cat"] = categorize_rating_vec(movies["Rotten_Tomatoes_Rating"], movies["IMDB_Rating"])
+movies["Rating_cat"].value_counts(dropna=False)
+```
+
+```{python}
+movies.query("Rating_cat == 'Commercial'")
+```

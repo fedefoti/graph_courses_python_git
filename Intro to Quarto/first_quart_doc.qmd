@@ -1,0 +1,67 @@
+---
+title: "My first quarto doc"
+author: "Fede Foti"
+format: 
+    html: 
+        embed-resources: true
+execute:
+    echo: false
+---
+
+# Level 1 Header
+
+Markdown lets you use *italics* and also **embolden** text
+
+You can also define bulleted lists:
+
+- First element
+- Second element
+
+You can also add [links](https://thegraphcourses.org)
+
+You can also embed images
+
+![description of the image](Images/Image%20graph%20courses.webp)
+
+## Level 2 Header
+
+### Level 3 Header
+
+
+```{python}
+#| echo: false
+#| eval: false
+2 + 2
+```
+```{python}
+3 * 4
+for num in [1, 2, 3]:
+    print(num)
+4 * 4
+```
+
+# Displaying Tables
+
+```{python}
+import plotly.express as px
+from itables import show
+
+tips = px.data.tips()
+show(tips)
+```
+
+# Displaying plots
+
+```{python}
+px.violin(tips, x = "tip", y = "sex")
+```
+
+# Displaying static  plots
+
+```{python}
+tips_sex = px.violin(tips, x="day", y="total_bill", color="sex")
+tips_sex.show()
+tips_sex.write_image("tips_sex_plot.png")
+```
+
+![Violin plot of total bill by day and sex](tips_sex_plot.png)

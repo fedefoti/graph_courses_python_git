@@ -1,0 +1,166 @@
+# Imports
+```{python}
+import pandas as pd
+import plotly.express as px
+```
+
+# Data
+
+```{python}
+# Temperatures dataset
+temperatures = pd.DataFrame(
+    {
+        "country": ["Sweden", "Denmark", "Norway"],
+        "1994": [1, 2, 3],
+        "1995": [3, 4, 5],
+        "1996": [5, 6, 7],
+    }
+)
+
+# Fuels Wide dataset
+fuels_wide = pd.read_csv("data/oil_per_capita_wide.csv")
+
+# Eurostat Births Wide dataset
+euro_births_wide = pd.read_csv("data/euro_births_wide.csv")
+
+# Contracts dataset
+contracts = pd.read_csv("data/chicago_contracts_20_23.csv")
+
+# Population dataset
+population = pd.read_csv("data/tidyr_population.csv")
+```
+
+# What do wide and long mean
+
+In the wide dataset, each observational unit (eg. each company) occupies only one row, with the repeated measures (eg. number of employees in different departments) spread across multiple columns.
+
+In the long dataset, each observational unit is spread over multiple rows.
+
+# Practice Q:
+
+```{python}
+temperatures
+```
+
+This data is in a wide format
+
+# When to use wide vs long data
+
+Wide: displaying information
+Long: analysis or plotting
+
+# From wide to long with melt()
+
+```{python}
+fuels_wide
+```
+
+```{python}
+fuels_long = fuels_wide.melt(id_vars=["Entity", "Code"])
+fuels_long
+```
+
+```{python}
+fuels_long = fuels_wide.melt(
+    id_vars=['Entity', 'Code'],
+    var_name='year',
+    value_name='oil_consumption'
+).sort_values(by=['Entity', 'year'])
+fuels_long
+```
+
+```{python}
+fuels_long['year'] = fuels_long['year'].str.replace('y_', '').astype(int)
+fuels_long
+```
+
+# Practice Q:
+Convert the temperatures dataset shown below into a long format. Your answer should have the following column names: “country”, “year”, and “avg_temp”.
+
+```{python}
+temperatures_long = temperatures.melt(id_vars = ["country"], var_name = "year", value_name = "avg_temp")
+temperatures_long
+```
+
+# Practice Q:
+For this practice question, you will use the euro_births_wide dataset from Eurostat. It shows the annual number of births in 50 European countries. The data is in a wide format. Convert it to a long format DataFrame that has the following column names: “country”, “year”, and “births_count”. Remove the x prefix from the year columns and convert them to integers.
+
+```{python}
+euro_births_long = euro_births_wide.melt(
+    id_vars = ["country"],
+    var_name = "year",
+    value_name = "birthds_count"
+).sort_values(by = ["country"])
+euro_births_long
+```
+
+```{python}
+euro_births_long["year"] = euro_births_long["year"].str.replace("x","").astype(int)
+```
+
+```{python}
+euro_births_long
+```
+
+# Using long data for analysis
+
+Long data easy to extract statistics, wide data not so much
+```{python}
+fuels_wide.head()
+```
+
+```{python}
+fuels_long.groupby('Entity')['oil_consumption'].mean()
+```
+
+```{python}
+fuels_wide[['y_1970', 'y_1980', 'y_1990', 'y_2000', 'y_2010', 'y_2020']].mean(axis=1)
+```
+
+```{python}
+subset = fuels_long.query('Entity in ["Peru", "Iran", "China"]')
+px.line(subset, x='year', y='oil_consumption', color='Entity', title='Average Fossil Fuel Consumption per Country')
+```
+
+# From long to wide with pivot()
+
+```{python}
+#numbers of contracts per state per year
+contracts_summary = contracts.groupby("state")["year"].value_counts().reset_index()
+contracts_summary
+```
+
+```{python}
+contracts_wide = contracts_summary.pivot(
+    index="state", columns="year", values="count"
+).reset_index()
+contracts_wide.head()
+```
+
+```{python}
+contracts_wide_year = contracts_summary.pivot(
+    index="year", columns="state", values="count"
+).reset_index()
+contracts_wide_year
+```
+
+# Practice Q:
+Convert the long temperatures_long dataset you created above back to a wide format. Your answer should have the following column names: “country”, “1994”, “1995”, and “1996”.
+
+```{python}
+temperatures_wide = temperatures_long.pivot(
+    index = "country", columns = "year", values = "avg_temp"
+).reset_index()
+temperatures_wide
+```
+
+# Practice Q:
+The population dataset shows the populations of 219 countries over time.
+Reshape this data into a wide format.
+
+```{python}
+population_wide = population.pivot(
+    index = "country", columns = "year", values = "population"
+).reset_index()
+population_wide.head()
+```

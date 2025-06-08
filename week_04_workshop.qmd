@@ -1,0 +1,62 @@
+---
+title: "India TB Pathways Analysis"
+format: html
+author: "Federica"
+embed-resources: true
+echo: false
+
+---
+
+```{python}
+#import packages
+
+import pandas as pd
+import plotly.express as px
+
+import itables as itab
+
+```
+
+# Introduction to the dataset
+
+The India TB Pathways dataset is based on a study conducted in Vellore district, Tamil Nadu, India. It
+examines the pre-diagnostic costs and health-seeking behavior of 880 new adult pulmonary tuberculosis
+patients registered at Primary Health Centres (PHCs).
+
+```{python}
+#load the dataset
+
+tb_data = pd.read_csv("/Users/Federica/Desktop/Graph course python/india_tb_pathways_and_costs.csv")
+
+itab.show(tb_data)
+```
+
+![Map of Tamil Nadu. Vellore district is in the north-east.](tndistrict_1.png)
+
+Vellore district is situated in the North-East of the Tamil Nadu region in India.
+
+# Male patients and female patients' age distribution
+
+```{python}
+#create overlaid histogram of age and sex
+
+tb_data_age_sex = px.histogram(tb_data, x="Age", color="Sex", barmode="overlay", title = "Age distribution by sex")
+
+tb_data_age_sex.show()
+
+```
+
+In the dataset there are more male patients than female ones. Addionally, male patients are on average older than female patients, as the age categories with the highest count sit more on the right side of the graph.
+
+```{python}
+tb = pd.DataFrame(tb_data)
+
+max_age = int(tb["Age"].max())
+
+min_age = int(tb["Age"].min())
+
+```
+
+The oldest patient recorded in the dataset is `{python} max_age` years old. The youngest patient is `{python} min_age` years old.
+
+
